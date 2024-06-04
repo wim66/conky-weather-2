@@ -23,7 +23,7 @@ WEATHER_DATA=$(curl -s $URL)
 CITY=$(echo $WEATHER_DATA | jq -r .name)
 WEATHER_ICON=$(echo $WEATHER_DATA | jq -r .weather[0].icon)
 WEATHER_DESC=$(echo $WEATHER_DATA | jq -r .weather[0].description)
-
+TEMP=$(echo $WEATHER_DATA | jq -r .main.temp)
 
 : ' comment (remove this line to use translations)
 
@@ -58,4 +58,6 @@ echo "WEATHER_ICON=${WEATHER_ICON}" >> $SCRIPT_DIR/weather_data
 
 echo "WEATHER_DESC=${WEATHER_DESC}" >> $SCRIPT_DIR/weather_data      # English, disable if you use own language
 #echo "WEATHER_DESC=${MY_WEATHER_DESC}" >> $SCRIPT_DIR/weather_data  # Use this line for your own language
+
+echo "TEMP=${TEMP}" >> $SCRIPT_DIR/weather_data
 
