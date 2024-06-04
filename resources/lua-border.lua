@@ -111,7 +111,7 @@ function conky_main_box()
 
 
 	{ -- border
-	x=4,y=4,w=453,h=150,
+	x=4,y=4,w=454,h=151,
 	colour=color_x, linear_gradient={298,10,298,300},
         corners={ {"circle",0},}, border=10,
         draw_me=true,                                                                               
