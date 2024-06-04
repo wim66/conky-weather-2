@@ -6,58 +6,37 @@
 
 # Determine the path to the script and its folders
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+WEATHER_DATA="$SCRIPT_DIR/weather_data"
 CACHE_DIR="$SCRIPT_DIR/cache"
 ICON_DIR="$SCRIPT_DIR/weather-icons/light/spils-icons"
-WEATHER_DATA_FILE="$SCRIPT_DIR/resources/weather_data"
+WEATHER_DATA="$SCRIPT_DIR/weather_data"
 
-API_KEY="$OWM_API_KEY" # put your OpenWeatherMap api here (or in your env) https://openweathermap.org/
+API_KEY="$OWM_API_KEY" # put your OpenWeatherMap api here https://openweathermap.org/
 CITY_ID="2759794"      # find your city id in the url box https://openweathermap.org/city/2759794
-URL="http://api.openweathermap.org/data/2.5/weather?id=${CITY_ID}&appid=${API_KEY}&units=metric"
+UNITS="metric" # of 'imperial' voor Fahrenheit
+LANG="nl" # Nederlands
+#URL="http://api.openweathermap.org/data/2.5/weather?id=${CITY_ID}&appid=${API_KEY}&units=metric"
+WEATHER_RESPONSE=$(curl -s "http://api.openweathermap.org/data/2.5/weather?id=$CITY_ID&appid=$API_KEY&units=$UNITS&lang=$LANG")
 
 # Create cache directory if it does not exist
 mkdir -p $CACHE_DIR
 
-WEATHER_DATA=$(curl -s $URL)
-
-# Get weather icon and other data
-CITY=$(echo $WEATHER_DATA | jq -r .name)
-WEATHER_ICON=$(echo $WEATHER_DATA | jq -r .weather[0].icon)
-WEATHER_DESC=$(echo $WEATHER_DATA | jq -r .weather[0].description)
-TEMP=$(echo $WEATHER_DATA | jq -r .main.temp)
-
-: ' comment (remove this line to use translations)
-
-# Translate the weather description into your own language
-translate_weather() {
-    case $1 in
-        "clear sky") echo "Helder weer" ;;
-        "few clouds") echo "Lichte bewolking" ;;
-        "scattered clouds") echo "verspreide wolken" ;;
-        "broken clouds") echo "Gedeeltelijk bewolkt" ;;
-        "overcast clouds") echo "Overwegend bewolkt" ;;
-        "shower rain") echo "Buiige regen" ;;
-        "rain") echo "Regen" ;;
-        "thunderstorm") echo "Onweer" ;;
-        "snow") echo "Sneeuw" ;;
-        "mist") echo "Mist" ;;
-        *) echo "$1" ;;
-    esac
-}
-
-MY_WEATHER_DESC=$(translate_weather "$WEATHER_DESC")
-
-(remove this line to use translations) end comment '
-
+# Parse de JSON respons en log elke stap
+CITY=$(echo $WEATHER_RESPONSE | jq -r .name)
+WEATHER_ICON=$(echo $WEATHER_RESPONSE | jq -r '.weather[0].icon')
+WEATHER_DESC=$(echo $WEATHER_RESPONSE | jq -r '.weather[0].description')
+TEMP=$(echo $WEATHER_RESPONSE | jq -r '.main.temp') 
+HUMIDITY=$(echo $WEATHER_RESPONSE | jq -r '.main.humidity') 
+WIND_SPEED=$(echo $WEATHER_RESPONSE | jq -r '.wind.speed')
 
 # Copy the icon to the cache directory
 cp ${ICON_DIR}/${WEATHER_ICON}.png ${CACHE_DIR}/weathericon.png
 
 # Save the weather data
-echo "CITY=${CITY}" > $SCRIPT_DIR/weather_data
-echo "WEATHER_ICON=${WEATHER_ICON}" >> $SCRIPT_DIR/weather_data
-
-echo "WEATHER_DESC=${WEATHER_DESC}" >> $SCRIPT_DIR/weather_data      # English, disable if you use own language
-#echo "WEATHER_DESC=${MY_WEATHER_DESC}" >> $SCRIPT_DIR/weather_data  # Use this line for your own language
-
-echo "TEMP=${TEMP}" >> $SCRIPT_DIR/weather_data
+echo "CITY=${CITY}" > $WEATHER_DATA
+echo "WEATHER_ICON=$WEATHER_ICON" >> $WEATHER_DATA
+echo "WEATHER_DESC=$WEATHER_DESC" >> $WEATHER_DATA
+echo "TEMP=$TEMP" >> $WEATHER_DATA
+echo "HUMIDITY=$HUMIDITY" >> $WEATHER_DATA
+echo "WIND_SPEED=$WIND_SPEED" >> $WEATHER_DATA
 
